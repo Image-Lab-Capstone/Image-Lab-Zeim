@@ -37,8 +37,9 @@ n, d, w, l = dcm_np.shape
 CROP_DIM = (300, 200)
 
 # Crop
-import ipdb; ipdb.set_trace()
-cropped_dcms = dcm_np[:, :, w-(CROP_DIM[0]//2):w+(CROP_DIM[0]//2), l-(CROP_DIM[1]//2):l+(CROP_DIM[1]//2)]
+hl = l // 2
+hw = w // 2
+cropped_dcms = dcm_np[:, :, hw-(CROP_DIM[0]//2):hw+(CROP_DIM[0]//2), hl-(CROP_DIM[1]//2):hl+(CROP_DIM[1]//2)]
 
 
 # Normalize
