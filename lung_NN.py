@@ -62,7 +62,7 @@ def proc_images():
 
 
 
-PATH = os.path.abspath(os.path.join("/Users/noahforman/Documents/csci401_project", 'input')) # Add your own filepath here
+PATH = os.path.abspath(os.path.join("..", 'input')) # Add your own filepath here
 
 # ../input/sample/images/
 SOURCE_IMAGES = os.path.join(PATH, "sample", "images")
@@ -71,7 +71,7 @@ SOURCE_IMAGES = os.path.join(PATH, "sample", "images")
 images = glob(os.path.join(SOURCE_IMAGES, "*.png"))
 
 # Load labels
-labels = pd.read_csv('/Users/noahforman/Documents/csci401_project/input/sample_labels.csv') # Add your own filepath here
+labels = pd.read_csv('../input/sample_labels.csv') # Add your own filepath here
 
 # First five images paths
 print(images[0:5])
