@@ -16,10 +16,10 @@ from keras import layers, models, optimizers
 from keras import backend as K
 
 # Load npz file containing image arrays
-x_npz = np.load("/Users/noahforman/Documents/csci401_project/x_images_arrays.npz") # Add your own filepath here
+x_npz = np.load("../x_images_arrays.npz") # Add your own filepath here
 x = x_npz['arr_0']
 # Load binary encoded labels for Lung Infiltrations: 0=Not_infiltration 1=Infiltration
-y_npz = np.load("/Users/noahforman/Documents/csci401_project/y_infiltration_labels.npz") # Add your own filepath here
+y_npz = np.load("../y_infiltration_labels.npz") # Add your own filepath here
 y = y_npz['arr_0']
 
 # First split the data in two sets, 80% for training, 20% for Val/Test)
@@ -67,7 +67,7 @@ model.add(layers.Dense(64))
 model.add(layers.BatchNormalization())
 model.add(layers.Activation("relu"))
 
-model.add(layers.Dense(2))
+model.add(layers.Dense(2)) # Change this depending on the number of classes we have
 model.add(layers.BatchNormalization())
 model.add(layers.Activation("softmax"))
 
