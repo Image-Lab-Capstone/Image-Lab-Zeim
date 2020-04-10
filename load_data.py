@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 RESIZE_DIM = 128
 
-def get_scans(img_loc, labels_path):
+def get_scans(img_loc, labels_path, debug_mode=False):
     df = pd.read_csv(labels_path)
     def extract_label(x):
         # Only get the first label for now.
@@ -20,9 +20,16 @@ def get_scans(img_loc, labels_path):
     X = []
     y = []
 
-    for scan_path in tqdm(os.listdir(img_loc)):
+    print('Loading files from %s' % img_loc)
+    take_file_paths = os.listdir(img_loc)
+    if debug_mode:
+        take_file_paths = take_file_paths[:20]
+
+    for scan_path in tqdm(take_file_paths):
         full_path = osp.join(img_loc, scan_path)
         im = io.imread(full_path)
+        if len(im.shape) == 3:
+            continue
         im = cv2.resize(im, (RESIZE_DIM, RESIZE_DIM))
         label_str = label_map[scan_path]
         label = uniq_vals.index(label_str)
@@ -30,8 +37,12 @@ def get_scans(img_loc, labels_path):
         X.append(im)
         y.append(label)
 
-    return X, y
+    print('Loaded %i images' % len(X))
+
+    return X, y, {
+            'uniq_count': len(uniq_vals)
+            }
 
 
 if __name__ == '__main__':
-    get_scans('data/images', 'data/sample_labels.csv')
+    get_scans('/data/aszot/kaggle/images_001/images', '/data/aszot/kaggle/Data_Entry_2017.csv')

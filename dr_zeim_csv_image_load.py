@@ -1,6 +1,6 @@
 """
 Loading input data from excel from Dr. Zeim
-and converting to pandas dataframe with 
+and converting to pandas dataframe with
 binary labels for each of the possible labels
 """
 
@@ -31,11 +31,11 @@ for label in label_dict:
         else:
             new_label_column.append(0)
     df[label] = new_label_column
-    
+
 #Export dataframe to csv
 df.to_csv (output_path, index = False, header=True)
 
-            
+
 
 
 

@@ -1,0 +1,10 @@
+{"epoch": 0, "loss": 29.183969497680664, "sparse_categorical_accuracy": 0.2666666805744171, "_runtime": 3.324145793914795, "_timestamp": 1586539771.1479387, "_step": 0}
+{"epoch": 1, "loss": 516.3695678710938, "sparse_categorical_accuracy": 0.20000000298023224, "_runtime": 3.5787196159362793, "_timestamp": 1586539771.402512, "_step": 1}
+{"epoch": 2, "loss": 126.34931945800781, "sparse_categorical_accuracy": 0.4000000059604645, "_runtime": 3.710319995880127, "_timestamp": 1586539771.5341127, "_step": 2}
+{"epoch": 3, "loss": 131.41217041015625, "sparse_categorical_accuracy": 0.13333334028720856, "_runtime": 3.8503849506378174, "_timestamp": 1586539771.6741786, "_step": 3}
+{"epoch": 4, "loss": 62.499732971191406, "sparse_categorical_accuracy": 0.13333334028720856, "_runtime": 3.966092109680176, "_timestamp": 1586539771.7898858, "_step": 4}
+{"epoch": 5, "loss": 16.768484115600586, "sparse_categorical_accuracy": 0.06666667014360428, "_runtime": 4.0842742919921875, "_timestamp": 1586539771.908068, "_step": 5}
+{"epoch": 6, "loss": 3.984471321105957, "sparse_categorical_accuracy": 0.46666666865348816, "_runtime": 4.192655324935913, "_timestamp": 1586539772.0164487, "_step": 6}
+{"epoch": 7, "loss": 1.1338915824890137, "sparse_categorical_accuracy": 0.7333333492279053, "_runtime": 4.44878077507019, "_timestamp": 1586539772.2725737, "_step": 7}
+{"epoch": 8, "loss": 0.8207622766494751, "sparse_categorical_accuracy": 0.800000011920929, "_runtime": 4.508372068405151, "_timestamp": 1586539772.3321648, "_step": 8}
+{"epoch": 9, "loss": 0.6724172830581665, "sparse_categorical_accuracy": 0.9333333373069763, "_runtime": 4.573478698730469, "_timestamp": 1586539772.3972723, "_step": 9}

@@ -1,0 +1,49 @@
+2020-04-10 10:30:23,794 DEBUG   MainThread:71796 [wandb_config.py:_load_defaults():82] no defaults not found in config-defaults.yaml
+2020-04-10 10:30:23,803 DEBUG   MainThread:71796 [cmd.py:execute():722] Popen(['git', 'cat-file', '--batch-check'], cwd=/home/aszot/Image-Lab-Zeim, universal_newlines=False, shell=None)
+2020-04-10 10:30:23,816 DEBUG   MainThread:71796 [cmd.py:execute():722] Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/aszot/Image-Lab-Zeim, universal_newlines=False, shell=None)
+2020-04-10 10:30:23,832 DEBUG   MainThread:71796 [run_manager.py:__init__():482] Initialized sync for andrew-random/kl4jwdx8
+2020-04-10 10:30:23,850 INFO    MainThread:71796 [run_manager.py:wrap_existing_process():1040] wrapping existing process 71621
+2020-04-10 10:30:23,850 WARNING MainThread:71796 [io_wrap.py:register():104] SIGWINCH handler was not None: <Handlers.SIG_DFL: 0>
+2020-04-10 10:30:23,854 DEBUG   MainThread:71796 [connectionpool.py:_new_conn():823] Starting new HTTPS connection (1): pypi.org:443
+2020-04-10 10:30:23,878 DEBUG   MainThread:71796 [connectionpool.py:_make_request():393] https://pypi.org:443 "GET /pypi/wandb/json HTTP/1.1" 200 42295
+2020-04-10 10:30:23,890 INFO    MainThread:71796 [run_manager.py:init_run():856] system metrics and metadata threads started
+2020-04-10 10:30:23,891 INFO    MainThread:71796 [run_manager.py:init_run():890] upserting run before process can begin, waiting at most 10 seconds
+2020-04-10 10:30:23,903 DEBUG   Thread-13 :71796 [connectionpool.py:_new_conn():823] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-04-10 10:30:24,005 DEBUG   Thread-13 :71796 [connectionpool.py:_make_request():393] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
+2020-04-10 10:30:24,008 INFO    Thread-13 :71796 [run_manager.py:_upsert_run():952] saving patches
+2020-04-10 10:30:24,008 DEBUG   Thread-13 :71796 [cmd.py:execute():722] Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/aszot/Image-Lab-Zeim, universal_newlines=False, shell=None)
+2020-04-10 10:30:24,021 DEBUG   Thread-13 :71796 [cmd.py:execute():722] Popen(['git', 'diff', '--cached', '--abbrev=40', '--full-index', '--raw'], cwd=/home/aszot/Image-Lab-Zeim, universal_newlines=False, shell=None)
+2020-04-10 10:30:24,030 DEBUG   Thread-13 :71796 [cmd.py:execute():722] Popen(['git', 'diff', '--abbrev=40', '--full-index', '--raw'], cwd=/home/aszot/Image-Lab-Zeim, universal_newlines=False, shell=None)
+2020-04-10 10:30:24,037 DEBUG   Thread-13 :71796 [cmd.py:execute():722] Popen(['git', 'version'], cwd=/home/aszot/Image-Lab-Zeim, universal_newlines=False, shell=None)
+2020-04-10 10:30:24,054 DEBUG   Thread-13 :71796 [cmd.py:execute():722] Popen(['git', 'merge-base', 'HEAD', 'a726a9615eed9ab613c774ac2a0e342c13bcc942'], cwd=/home/aszot/Image-Lab-Zeim, universal_newlines=False, shell=None)
+2020-04-10 10:30:24,063 INFO    Thread-13 :71796 [run_manager.py:_upsert_run():954] saving pip packages
+2020-04-10 10:30:24,064 INFO    Thread-13 :71796 [run_manager.py:_upsert_run():956] initializing streaming files api
+2020-04-10 10:30:24,065 INFO    Thread-13 :71796 [run_manager.py:_upsert_run():963] unblocking file change observer, beginning sync with W&B servers
+2020-04-10 10:30:24,068 INFO    MainThread:71796 [run_manager.py:wrap_existing_process():1057] informing user process we are ready to proceed
+2020-04-10 10:30:24,069 INFO    MainThread:71796 [run_manager.py:_sync_etc():1140] entering loop for messages from user process
+2020-04-10 10:30:24,798 INFO    Thread-2  :71796 [run_manager.py:_on_file_created():615] file/dir created: /home/aszot/Image-Lab-Zeim/wandb/run-20200410_173023-kl4jwdx8/wandb-metadata.json
+2020-04-10 10:30:24,799 INFO    Thread-2  :71796 [run_manager.py:_on_file_created():615] file/dir created: /home/aszot/Image-Lab-Zeim/wandb/run-20200410_173023-kl4jwdx8/output.log
+2020-04-10 10:30:24,799 INFO    Thread-2  :71796 [run_manager.py:_on_file_created():615] file/dir created: /home/aszot/Image-Lab-Zeim/wandb/run-20200410_173023-kl4jwdx8/diff.patch
+2020-04-10 10:30:24,799 INFO    Thread-2  :71796 [run_manager.py:_on_file_created():615] file/dir created: /home/aszot/Image-Lab-Zeim/wandb/run-20200410_173023-kl4jwdx8/requirements.txt
+2020-04-10 10:30:24,807 DEBUG   Thread-14 :71796 [connectionpool.py:_new_conn():823] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-04-10 10:30:24,810 DEBUG   Thread-15 :71796 [connectionpool.py:_new_conn():823] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-04-10 10:30:24,817 DEBUG   Thread-16 :71796 [connectionpool.py:_new_conn():823] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-04-10 10:30:24,938 DEBUG   Thread-16 :71796 [connectionpool.py:_make_request():393] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
+2020-04-10 10:30:24,943 DEBUG   Thread-16 :71796 [connectionpool.py:_new_conn():823] Starting new HTTPS connection (1): storage.googleapis.com:443
+2020-04-10 10:30:24,945 DEBUG   Thread-14 :71796 [connectionpool.py:_make_request():393] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
+2020-04-10 10:30:24,946 DEBUG   Thread-15 :71796 [connectionpool.py:_make_request():393] https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
+2020-04-10 10:30:24,954 DEBUG   Thread-15 :71796 [connectionpool.py:_new_conn():823] Starting new HTTPS connection (1): storage.googleapis.com:443
+2020-04-10 10:30:24,964 DEBUG   Thread-14 :71796 [connectionpool.py:_new_conn():823] Starting new HTTPS connection (1): storage.googleapis.com:443
+2020-04-10 10:30:25,177 DEBUG   Thread-15 :71796 [connectionpool.py:_make_request():393] https://storage.googleapis.com:443 "PUT /wandb-production.appspot.com/clvr/andrew-random/kl4jwdx8/diff.patch?Expires=1586539810&GoogleAccessId=gorilla-cloud-storage%40wandb-production.iam.gserviceaccount.com&Signature=NzuAURCjakFn%2FFFioPeQ3stTqZ2l8NECAoIsXOB1FB5Ajjy4d3lTs0laYk5aWoZCnORwfBKAfMQHSisb7i%2F9Itws5AKB4SQR6XhUKTTzM3G0r2VDXvc11nR43T2IZTfU77y5ibABs2lzLFqaVVQJmgfoOV8GmGJ2My3Ot2FUnNBsc8%2B%2BE5KW%2FHXbiMIQNQAfVBaoUaT3WOTZr1t9KHVIsd2EJR8bThqVoXG2z3OvvOo%2Fls22Q7kWYD%2F%2BhByMoTT3uea0xTC9KSwkDzDWC2Sz1KU7z7KDLe521Nl788aQvpMcOH1vniq1PWy%2Br%2Fih47wNTPX%2FgnHrJj5o5L%2F%2FJF%2BBTg%3D%3D HTTP/1.1" 200 0
+2020-04-10 10:30:25,213 DEBUG   Thread-14 :71796 [connectionpool.py:_make_request():393] https://storage.googleapis.com:443 "PUT /wandb-production.appspot.com/clvr/andrew-random/kl4jwdx8/wandb-metadata.json?Expires=1586539810&GoogleAccessId=gorilla-cloud-storage%40wandb-production.iam.gserviceaccount.com&Signature=Xi24UwREC7lm4auU2D9J9ND7fKmuH%2Fpbb8aJD00Y%2FDfD758oU4ZRcbwUOi7VDv7we%2FD%2FICx3p45Y7ayF3SzqcqxPLKV9K6DPvUJP%2BgYaX%2BkBMW5BF2DLNAlfiG09cTSL7LZZAvSE8ImC9ZqDo4X6GtreKEfthFseMME%2F2NOc%2BePp9Eh4ZG1wjozQfvofVf2h34rf6YZk%2BallxlrjnqBkGl6oMBJnb13ou3Xiwr%2BZ%2FBWg%2B6hBnXAeo1la4PW2iMAn2xYcxbqSymj27ZWNydb6h2wJR%2Bi8d5CxZWC8xv1frGcsVBWD2JJYhFvcTDciMUrrLJ9d1wZcs8B%2BJ7HkrB4KXA%3D%3D HTTP/1.1" 200 0
+2020-04-10 10:30:25,391 DEBUG   Thread-16 :71796 [connectionpool.py:_make_request():393] https://storage.googleapis.com:443 "PUT /wandb-production.appspot.com/clvr/andrew-random/kl4jwdx8/requirements.txt?Expires=1586539810&GoogleAccessId=gorilla-cloud-storage%40wandb-production.iam.gserviceaccount.com&Signature=aQ4456ccXKxW79WjBv8l8sFrr9NJxbvsDGXAclcUt3LdWrStSXMW78aH4zodm%2F91pGcuSuqeStqDaQVrM9MCuWW2%2BTNw8QmknAnXrXvZVAYNu8kdZ3NBQkMrc%2FZjr6eCS%2FJYwLiunuLRPs47zFTEuWiWCAyVSTLU%2BXQXDV8G5Dlij8adX9uAdIX1gv4coo8STZ1FJWcJPcQYueMWbpylVbaJCEFdHLF9Dz0I7j7QWNnSgUrb69yoqi934dxO2aecBoW3iAH%2FF0dkdRthf0nldMQ5rTlrSbl%2FcV8neHbjw6E2PxPcVNe9zffL%2FIKZVa5E5sXooAXVZlc3Zxw%2F1oqzrw%3D%3D HTTP/1.1" 200 0
+2020-04-10 10:30:25,798 INFO    Thread-2  :71796 [run_manager.py:_on_file_modified():626] file/dir modified: /home/aszot/Image-Lab-Zeim/wandb/run-20200410_173023-kl4jwdx8/output.log
+2020-04-10 10:30:26,068 DEBUG   Thread-6  :71796 [connectionpool.py:_new_conn():823] Starting new HTTPS connection (1): api.wandb.ai:443
+2020-04-10 10:30:26,153 DEBUG   Thread-6  :71796 [connectionpool.py:_make_request():393] https://api.wandb.ai:443 "POST /clvr/andrew-random/kl4jwdx8/file_stream HTTP/1.1" 200 None
+2020-04-10 10:30:26,798 INFO    Thread-2  :71796 [run_manager.py:_on_file_modified():626] file/dir modified: /home/aszot/Image-Lab-Zeim/wandb/run-20200410_173023-kl4jwdx8/output.log
+2020-04-10 10:30:27,798 INFO    Thread-2  :71796 [run_manager.py:_on_file_modified():626] file/dir modified: /home/aszot/Image-Lab-Zeim/wandb/run-20200410_173023-kl4jwdx8/output.log
+2020-04-10 10:30:28,226 DEBUG   Thread-6  :71796 [connectionpool.py:_make_request():393] https://api.wandb.ai:443 "POST /clvr/andrew-random/kl4jwdx8/file_stream HTTP/1.1" 200 None
+2020-04-10 10:30:28,799 INFO    Thread-2  :71796 [run_manager.py:_on_file_modified():626] file/dir modified: /home/aszot/Image-Lab-Zeim/wandb/run-20200410_173023-kl4jwdx8/output.log
+2020-04-10 10:30:29,799 INFO    Thread-2  :71796 [run_manager.py:_on_file_modified():626] file/dir modified: /home/aszot/Image-Lab-Zeim/wandb/run-20200410_173023-kl4jwdx8/output.log
+2020-04-10 10:30:30,312 DEBUG   Thread-6  :71796 [connectionpool.py:_make_request():393] https://api.wandb.ai:443 "POST /clvr/andrew-random/kl4jwdx8/file_stream HTTP/1.1" 200 None
+kl4jwdx8/output.log

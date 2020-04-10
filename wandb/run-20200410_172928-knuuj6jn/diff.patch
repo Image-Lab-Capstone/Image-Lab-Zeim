@@ -1,0 +1,779 @@
+diff --git a/NN_from_numpy.py b/NN_from_numpy.py
+index 6eaee18..49c778e 100644
+--- a/NN_from_numpy.py
++++ b/NN_from_numpy.py
+@@ -1,39 +1,63 @@
+ import numpy as np
+ import tensorflow as tf
+ from sklearn.model_selection import train_test_split
+-from load_dat import get_scans, pre_process_scans
++from load_data import get_scans
++from tensorflow.keras.layers import Dense, Conv2D, Flatten, Dropout, MaxPooling2D
++import argparse
++
++parser = argparse.ArgumentParser()
++parser.add_argument('--batch-size', type=int, default=64)
++parser.add_argument('--use-wb', action='store_true')
++parser.add_argument('--wb-proj', type=str, default='andrew-random')
++args = parser.parse_args()
++
++if args.use_wb:
++    from wandb.keras import WandbCallback
++    import wandb
++    wandb.init(project=args.wb_proj)
+ 
+ # LOCATION OF THE FOLDERS CONTAINING THE DICOM FILES.
+-DATA_FOLDER = 'data/dicom/'
+-NUM_CLASSES = 10
+-BATCH_SIZE = 64
++DATA_FOLDER = '/data/aszot/kaggle/images_001/images'
++LABEL_PATH = '/data/aszot/kaggle/Data_Entry_2017.csv'
+ SHUFFLE_BUFFER_SIZE = 100
+ 
+-scans = get_scans(DATA_FOLDER)
+-scans = pre_process_scans(scans)
+-labels = np.random.randint(0, NUM_CLASSES, len(scans))
++X, y, info = get_scans(DATA_FOLDER, LABEL_PATH, debug_mode=True)
++num_labels = info['uniq_count']
+ 
+-# For now just work with a single slice in the scan
+-scans = scans[:, 0]
++X = np.array(X)
++img_width, img_height = X.shape[1:]
++X = X.reshape(-1, img_width, img_height, 1)
++y = np.array(y)
+ 
+-x_train, x_test, y_train, y_test = train_test_split(scans, labels, test_size=0.2)
++x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+ 
+ train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+ test_dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test))
+ 
+-train_dataset = train_dataset.shuffle(SHUFFLE_BUFFER_SIZE).batch(BATCH_SIZE)
+-test_dataset = test_dataset.batch(BATCH_SIZE)
++train_dataset = train_dataset.shuffle(SHUFFLE_BUFFER_SIZE).batch(args.batch_size)
++test_dataset = test_dataset.batch(args.batch_size)
+ 
+ model = tf.keras.Sequential([
+-    tf.keras.layers.Flatten(input_shape=(100, 100)),
+-    tf.keras.layers.Dense(128, activation='relu'),
+-    tf.keras.layers.Dense(10)
++    Conv2D(16, 3, padding='same', activation='relu', input_shape=(img_width, img_height, 1)),
++    MaxPooling2D(),
++    Dropout(0.2),
++    Conv2D(32, 3, padding='same', activation='relu'),
++    MaxPooling2D(),
++    Conv2D(64, 3, padding='same', activation='relu'),
++    MaxPooling2D(),
++    Flatten(),
++    Dense(128, activation='relu'),
++    Dense(num_labels)
+ ])
+ 
++
++callbacks = []
++if args.use_wb:
++    callbacks.append(WandbCallback())
++
+ model.compile(optimizer=tf.keras.optimizers.RMSprop(),
+               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+               metrics=['sparse_categorical_accuracy'])
+ 
+-model.fit(train_dataset, epochs=10)
+-
++model.fit(train_dataset, epochs=10, callbacks=callbacks)
+ model.evaluate(test_dataset)
+diff --git a/dr_zeim_csv_image_load.py b/dr_zeim_csv_image_load.py
+index d270fc6..54566b2 100644
+--- a/dr_zeim_csv_image_load.py
++++ b/dr_zeim_csv_image_load.py
+@@ -1,6 +1,6 @@
+ """
+ Loading input data from excel from Dr. Zeim
+-and converting to pandas dataframe with 
++and converting to pandas dataframe with
+ binary labels for each of the possible labels
+ """
+ 
+@@ -31,11 +31,11 @@ for label in label_dict:
+         else:
+             new_label_column.append(0)
+     df[label] = new_label_column
+-    
++
+ #Export dataframe to csv
+ df.to_csv (output_path, index = False, header=True)
+ 
+-            
++
+ 
+ 
+ 
+diff --git a/load_dat.py b/load_dat.py
+deleted file mode 100644
+index 6c6d238..0000000
+--- a/load_dat.py
++++ /dev/null
+@@ -1,53 +0,0 @@
+-import pydicom
+-import os
+-import os.path as osp
+-import numpy as np
+-import cv2
+-
+-
+-def get_scans(data_loc):
+-    dcms = []
+-    for dcm_folder in os.listdir(data_loc):
+-        patient_dcm = []
+-        for f in os.listdir(osp.join(data_loc, dcm_folder)):
+-            full_f = osp.join(data_loc, dcm_folder, f)
+-            dcm_slice = pydicom.read_file(full_f)
+-            patient_dcm.append(dcm_slice)
+-        dcms.append(patient_dcm)
+-
+-    dcm_np = [[dcm.pixel_array for dcm in patient_dcm] for patient_dcm in dcms]
+-
+-    min_dims = np.min([[x.shape
+-        for x in patient_dcm]
+-        for patient_dcm in dcm_np], axis=-1)[0]
+-
+-    # This will need to change because some patients only have one scan?
+-    min_scans = min([len(x) for x in dcm_np])
+-
+-    dcm_np = np.array([[x[:min_dims[0],:min_dims[1]]
+-        for x in patient_dcm[:min_scans]]
+-        for patient_dcm in dcm_np])
+-    return dcm_np
+-
+-
+-def pre_process_scans(dcm_np):
+-    # (num patients, number of scans per patient, width, length)
+-    n, d, w, l = dcm_np.shape
+-
+-    # The crop dimensions around the center of the image.
+-    CROP_DIM = (300, 200)
+-
+-    # Crop
+-    hl = l // 2
+-    hw = w // 2
+-    cropped_dcms = dcm_np[:, :, hw-(CROP_DIM[0]//2):hw+(CROP_DIM[0]//2), hl-(CROP_DIM[1]//2):hl+(CROP_DIM[1]//2)]
+-
+-    # Normalize
+-    normalized_dc = (cropped_dcms - np.mean(cropped_dcms, axis=0)) / np.std(cropped_dcms, axis=0)
+-    resized_dc = np.array([[cv2.resize(x, (100, 100))
+-            for x in patient_dcm]
+-            for patient_dcm in normalized_dc])
+-    return resized_dc
+-
+-
+-
+diff --git a/load_dat_new.py b/load_dat_new.py
+deleted file mode 100644
+index 2c46f9c..0000000
+--- a/load_dat_new.py
++++ /dev/null
+@@ -1,37 +0,0 @@
+-import os
+-import os.path as osp
+-import numpy as np
+-from skimage import io
+-import cv2
+-import pandas as pd
+-from tqdm import tqdm
+-
+-RESIZE_DIM = 128
+-
+-def get_scans(img_loc, labels_path):
+-    df = pd.read_csv(labels_path)
+-    def extract_label(x):
+-        # Only get the first label for now.
+-        return x.split('|')[0]
+-
+-    label_map = {k: extract_label(v) for k, v in zip(df['Image Index'].tolist(), df['Finding Labels'].tolist())}
+-    uniq_vals = list(set(list(label_map.values())))
+-
+-    X = []
+-    y = []
+-
+-    for scan_path in tqdm(os.listdir(img_loc)):
+-        full_path = osp.join(img_loc, scan_path)
+-        im = io.imread(full_path)
+-        im = cv2.resize(im, (RESIZE_DIM, RESIZE_DIM))
+-        label_str = label_map[scan_path]
+-        label = uniq_vals.index(label_str)
+-
+-        X.append(im)
+-        y.append(label)
+-
+-    return X, y
+-
+-
+-if __name__ == '__main__':
+-    get_scans('data/images', 'data/sample_labels.csv')
+diff --git a/loading_and_training.py b/loading_and_training.py
+deleted file mode 100644
+index 1ed99b3..0000000
+--- a/loading_and_training.py
++++ /dev/null
+@@ -1,144 +0,0 @@
+-#!/usr/bin/env python3
+-# -*- coding: utf-8 -*-
+-"""
+-Created on Fri Mar 27 14:30:03 2020
+-
+-@author: noahforman
+-"""
+-
+-import pandas as pd
+-import numpy as np
+-import matplotlib.pylab as plt
+-from sklearn.model_selection import train_test_split
+-
+-from keras.preprocessing.image import ImageDataGenerator
+-from keras import layers, models, optimizers
+-from keras import backend as K
+-
+-# Load npz file containing image arrays
+-x_npz = np.load("../x_images_arrays.npz") # Add your own filepath here
+-x = x_npz['arr_0']
+-# Load binary encoded labels for Lung Infiltrations: 0=Not_infiltration 1=Infiltration
+-y_npz = np.load("../y_infiltration_labels.npz") # Add your own filepath here
+-y = y_npz['arr_0']
+-
+-# First split the data in two sets, 80% for training, 20% for Val/Test)
+-X_train, X_valtest, y_train, y_valtest = train_test_split(x,y, test_size=0.2, random_state=1, stratify=y)
+-
+-# Second split the 20% into validation and test sets
+-X_test, X_val, y_test, y_val = train_test_split(X_valtest, y_valtest, test_size=0.5, random_state=1, stratify=y_valtest)
+-
+-print(np.array(X_train).shape)
+-print(np.array(X_val).shape)
+-print(np.array(X_test).shape)
+-
+-K.image_data_format()
+-
+-img_width, img_height = 128, 128
+-nb_train_samples = len(X_train)
+-nb_validation_samples = len(X_val)
+-epochs = 10
+-batch_size = 16
+-
+-
+-model = models.Sequential()
+-
+-model.add(layers.Conv2D(32, (3, 3), input_shape=(img_width, img_height, 3)))
+-model.add(layers.BatchNormalization())
+-model.add(layers.Activation("relu"))
+-
+-model.add(layers.MaxPooling2D((2, 2)))
+-
+-model.add(layers.Conv2D(64, (3, 3)))
+-model.add(layers.BatchNormalization())
+-model.add(layers.Activation("relu"))
+-
+-model.add(layers.MaxPooling2D((2, 2)))
+-
+-model.add(layers.Conv2D(128, (3, 3)))
+-model.add(layers.BatchNormalization())
+-model.add(layers.Activation("relu"))
+-
+-model.add(layers.MaxPooling2D((2, 2)))
+-
+-model.add(layers.Flatten())
+-model.add(layers.Dropout(0.2))
+-model.add(layers.Dense(64))
+-model.add(layers.BatchNormalization())
+-model.add(layers.Activation("relu"))
+-
+-model.add(layers.Dense(2)) # Change this depending on the number of classes we have
+-model.add(layers.BatchNormalization())
+-model.add(layers.Activation("softmax"))
+-
+-model.compile(
+-    loss='sparse_categorical_crossentropy',
+-    optimizer=optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0),
+-    metrics=['acc'])
+-
+-model.summary()
+-
+-
+-
+-train_datagen = ImageDataGenerator(rescale=1. / 255, horizontal_flip=True, rotation_range=30)
+-valtest_datagen = ImageDataGenerator(rescale=1. / 255)
+-
+-train_generator = train_datagen.flow(np.array(X_train), y_train, batch_size=batch_size)
+-validation_generator = valtest_datagen.flow(np.array(X_val), y_val, batch_size=batch_size)
+-test_generator = valtest_datagen.flow(np.array(X_test), y_test, batch_size=batch_size)
+-
+-history = model.fit_generator(
+-    train_generator, 
+-    steps_per_epoch=nb_train_samples // batch_size,
+-    epochs=epochs,
+-    validation_data=validation_generator,
+-    validation_steps=nb_validation_samples // batch_size
+-)
+-
+-model.save_weights('weights.h5')
+-
+-
+-
+-
+-
+-acc = history.history['acc']
+-val_acc = history.history['val_acc']
+-loss = history.history['loss']
+-val_loss = history.history['val_loss']
+-epochs = range(1, len(acc) + 1)
+-plt.plot(epochs, acc, 'blue', label='Training acc')
+-plt.plot(epochs, val_acc, 'red', label='Validation acc')
+-plt.title('Training and validation accuracy')
+-plt.legend()
+-plt.figure()
+-plt.plot(epochs, loss, 'blue', label='Training loss')
+-plt.plot(epochs, val_loss, 'red', label='Validation loss')
+-plt.title('Training and validation loss')
+-plt.legend()
+-plt.show()
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+diff --git a/lung_NN.py b/lung_NN.py
+deleted file mode 100644
+index 733c693..0000000
+--- a/lung_NN.py
++++ /dev/null
+@@ -1,126 +0,0 @@
+-#!/usr/bin/env python3
+-# -*- coding: utf-8 -*-
+-"""
+-Created on Tue Mar 24 15:30:08 2020
+-
+-@author: noahforman
+-"""
+-import cv2
+-import os
+-import random
+-import matplotlib.pylab as plt
+-from glob import glob
+-import pandas as pd
+-import numpy as np
+-from sklearn.model_selection import train_test_split
+-
+-
+-
+-
+-def proc_images():
+-    """
+-    Returns two arrays: 
+-        x is an array of resized images
+-        y is an array of labels
+-    """
+-    
+-    disease="Infiltration"
+-    disease2="Atelectasis"
+-    # ADD the other diseases here #
+-
+-    x = [] # images as arrays
+-    y = [] # labels Infiltration or Not_infiltration
+-    WIDTH = 128
+-    HEIGHT = 128
+-
+-    for img in images:
+-        base = os.path.basename(img)
+-        finding = labels["Finding Labels"][labels["Image Index"] == base].values[0]
+-
+-        # Read and resize image
+-        full_size_image = cv2.imread(img)
+-        x.append(cv2.resize(full_size_image, (WIDTH,HEIGHT), interpolation=cv2.INTER_CUBIC))
+-
+-        # Labels
+-        if disease in finding:
+-            #finding = str(disease)
+-            finding = 1
+-            y.append(finding)
+-        elif disease2 in finding:
+-            finding = 2
+-            y.append(finding)
+-        # Add the other disease conditions here
+-        else:
+-            #finding = "Not_" + str(disease)
+-            finding = 0
+-            y.append(finding)
+-
+-    return x,y
+-
+-
+-
+-
+-
+-
+-PATH = os.path.abspath(os.path.join("..", 'input')) # Add your own filepath here
+-
+-# ../input/sample/images/
+-SOURCE_IMAGES = os.path.join(PATH, "sample", "images")
+-
+-# ../input/sample/images/*.png
+-images = glob(os.path.join(SOURCE_IMAGES, "*.png"))
+-
+-# Load labels
+-labels = pd.read_csv('../input/sample_labels.csv') # Add your own filepath here
+-
+-# First five images paths
+-print(images[0:5])
+-
+-r = random.sample(images, 3)
+-r
+-
+-# Matplotlib black magic
+-plt.figure(figsize=(16,16))
+-plt.subplot(131)
+-plt.imshow(cv2.imread(r[0]))
+-
+-plt.subplot(132)
+-plt.imshow(cv2.imread(r[1]))
+-
+-plt.subplot(133)
+-plt.imshow(cv2.imread(r[2]));  
+-
+-x,y = proc_images()
+-
+-# Set it up as a dataframe if you like
+-df = pd.DataFrame()
+-df["labels"]=y
+-df["images"]=x
+-
+-print(len(df), df.images[0].shape)
+-
+-np.savez("x_images_arrays", x)
+-np.savez("y_infiltration_labels", y)
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+diff --git a/main.py b/main.py
+deleted file mode 100644
+index fa42acb..0000000
+--- a/main.py
++++ /dev/null
+@@ -1,170 +0,0 @@
+-#!/usr/bin/env python3
+-# -*- coding: utf-8 -*-
+-
+-# ---------------------------------------------------------------------
+-# Code from: https://www.tensorflow.org/tutorials/images/classification
+-# ---------------------------------------------------------------------
+-
+-from __future__ import absolute_import, division, print_function, unicode_literals
+-
+-import tensorflow as tf
+-
+-from tensorflow.keras.models import Sequential
+-from tensorflow.keras.layers import Dense, Conv2D, Flatten, Dropout, MaxPooling2D
+-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+-
+-import os
+-import numpy as np
+-import matplotlib.pyplot as plt
+-
+-import preprocessing
+-
+-#_URL = 'https://storage.googleapis.com/mledu-datasets/cats_and_dogs_filtered.zip'  # EDITED THIS LINE
+-
+-#path_to_zip = tf.keras.utils.get_file('cats_and_dogs.zip', origin=_URL, extract=True)  # EDITED THIS LINE
+-
+-#PATH = os.path.join(os.path.dirname(path_to_zip), 'cats_and_dogs_filtered')  # EDITED THIS LINE
+-
+-train_dir = os.path.join(, 'train') # FIRST PARAMETER IS FILEPATH TO INPUT DATA -- WILL BE DIFFERENT ON EACH COMPUTER
+-validation_dir = os.path.join(, 'validation') # FIRST PARAMETER IS FILEPATH TO INPUT DATA -- WILL BE DIFFERENT ON EACH COMPUTER
+-
+-train_head_dir = os.path.join(train_dir, 'head')  # directory with our training cat pictures
+-train_hip_dir = os.path.join(train_dir, 'hip')  # directory with our training dog pictures
+-train_pelvis_dir = os.path.join(train_dir, 'pelvis') # EDITED THIS LINE
+-train_shoulder_dir = os.path.join(train_dir, 'shoulder') # EDITED THIS LINE
+-validation_head_dir = os.path.join(validation_dir, 'head')  # directory with our validation cat pictures
+-validation_hip_dir = os.path.join(validation_dir, 'hip')  # directory with our validation dog pictures
+-validation_pelvis_dir = os.path.join(validation_dir, 'pelvis') # EDITED THIS LINE
+-validation_shoulder_dir = os.path.join(validation_dir, 'shoulder') # EDITED THIS LINE
+-
+-num_head_tr = len(os.listdir(train_head_dir))
+-num_hip_tr = len(os.listdir(train_hip_dir))
+-num_pelvis_tr = len(os.listdir(train_pelvis_dir)) # EDITED THIS LINE
+-num_shoulder_tr = len(os.listdir(train_shoulder_dir)) # EDITED THIS LINE
+-
+-num_head_val = len(os.listdir(validation_head_dir))
+-num_hip_val = len(os.listdir(validation_hip_dir))
+-num_pelvis_val = len(os.listdir(validation_pelvis_dir)) # EDITED THIS LINE
+-num_shoulder_val = len(os.listdir(validation_shoulder_dir)) # EDITED THIS LINE
+-
+-total_train = num_head_tr + num_hip_tr + num_pelvis_tr + num_shoulder_tr # EDITED THIS LINE
+-total_val = num_head_val + num_hip_val + num_pelvis_val + num_shoulder_val # EDITED THIS LINE
+-
+-print('total training head images:', num_head_tr)
+-print('total training hip images:', num_hip_tr)
+-
+-print('total validation head images:', num_head_val)
+-print('total validation hip images:', num_hip_val)
+-print("--")
+-print("Total training images:", total_train)
+-print("Total validation images:", total_val)
+-
+-batch_size = 128
+-epochs = 30
+-IMG_HEIGHT = 150
+-IMG_WIDTH = 150
+-
+-train_image_generator = ImageDataGenerator(rescale=1./255,
+-                                           horizontal_flip=True,
+-                                           rotation_range=45,
+-                                           zoom_range=0.5,
+-                                           width_shift_range=0.15,
+-                                           height_shift_range=0.15) # Generator for our training data
+-
+-validation_image_generator = ImageDataGenerator(rescale=1./255) # Generator for our validation data
+-
+-train_data_gen = train_image_generator.flow_from_directory(batch_size=batch_size,
+-                                                           directory=train_dir,
+-                                                           shuffle=True,
+-                                                           target_size=(IMG_HEIGHT, IMG_WIDTH),
+-                                                           class_mode='binary')
+-
+-val_data_gen = validation_image_generator.flow_from_directory(batch_size=batch_size,
+-                                                              directory=validation_dir,
+-                                                              target_size=(IMG_HEIGHT, IMG_WIDTH),
+-                                                              class_mode='binary')
+-
+-
+-
+-
+-#sample_training_images, _ = next(train_data_gen)
+-
+-augmented_images = [train_data_gen[0][0][0] for i in range(5)]
+-
+-# This function will plot images in the form of a grid with 1 row and 5 columns where images are placed in each column.
+-def plotImages(images_arr):
+-    fig, axes = plt.subplots(1, 5, figsize=(20,20))
+-    axes = axes.flatten()
+-    for img, ax in zip( images_arr, axes):
+-        ax.imshow(img)
+-        ax.axis('off')
+-    plt.tight_layout()
+-    plt.show()
+-
+-#plotImages(sample_training_images[:5])
+-plotImages(augmented_images)
+-
+-model = Sequential([
+-    Conv2D(16, 3, padding='same', activation='relu', input_shape=(IMG_HEIGHT, IMG_WIDTH ,3)),
+-    MaxPooling2D(),
+-    Dropout(0.2),
+-    Conv2D(32, 3, padding='same', activation='relu'),
+-    MaxPooling2D(),
+-    Conv2D(64, 3, padding='same', activation='relu'),
+-    MaxPooling2D(),
+-    Dropout(0.2),
+-    Flatten(),
+-    Dense(512, activation='relu'),
+-    Dense(4, activation='softmax') # EDITED THIS LINE
+-])
+-
+-model.compile(optimizer='adam',
+-              loss='sparse_categorical_crossentropy', # EDITED THIS LINE
+-              metrics=['accuracy'])
+-
+-model.summary()
+-
+-history = model.fit_generator(
+-    train_data_gen,
+-    steps_per_epoch=total_train // batch_size,
+-    epochs=epochs,
+-    validation_data=val_data_gen,
+-    validation_steps=total_val // batch_size
+-)
+-
+-acc = history.history['accuracy']
+-val_acc = history.history['val_accuracy']
+-
+-loss = history.history['loss']
+-val_loss = history.history['val_loss']
+-
+-epochs_range = range(epochs)
+-
+-plt.figure(figsize=(8, 8))
+-plt.subplot(1, 2, 1)
+-plt.plot(epochs_range, acc, label='Training Accuracy')
+-plt.plot(epochs_range, val_acc, label='Validation Accuracy')
+-plt.legend(loc='lower right')
+-plt.title('Training and Validation Accuracy')
+-
+-plt.subplot(1, 2, 2)
+-plt.plot(epochs_range, loss, label='Training Loss')
+-plt.plot(epochs_range, val_loss, label='Validation Loss')
+-plt.legend(loc='upper right')
+-plt.title('Training and Validation Loss')
+-plt.show()
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+diff --git a/metadata.py b/metadata.py
+deleted file mode 100644
+index 7dcceaa..0000000
+--- a/metadata.py
++++ /dev/null
+@@ -1,102 +0,0 @@
+-import pydicom
+-import os
+-import os.path as osp
+-import pdb
+-
+-
+-#change to your location
+-DATA_FOLDER = '/Users/jacob/Documents/cs-capstone/data/3863/'
+-DATA_SAVE = '/Users/jacob/Documents/cs-capstone/data/anonymize/'
+-
+-def get_file_list(dirName):
+-    # Get the list of all files in directory tree at given path
+-    listOfFiles = list()
+-    for (dirpath, dirnames, filenames) in os.walk(dirName):
+-        listOfFiles += [os.path.join(dirpath, file) for file in filenames]
+-    return listOfFiles
+-
+-def get_all_patients(DATA_FOLDER):
+-    '''
+-    Function iterates through every dicom image and extracts the patient name information from each file
+-    and generates dict with counts for each patient
+-    '''
+-    patient_name_count = {}
+-
+-    file_list = get_file_list(DATA_FOLDER)
+-    for full_f in file_list:
+-        #prevent macs from fucking up
+-        if('DS_Store' in full_f):
+-            continue
+-        dcm = pydicom.read_file(full_f)
+-        meta_inf = pydicom.filereader.dcmread(full_f)
+-        patient_name = meta_inf.PatientName
+-        if patient_name in patient_name_count:
+-            patient_name_count[patient_name] += 1
+-        else:
+-            patient_name_count[patient_name] = 0
+-        
+-    return patient_name_count
+-
+-def bodypart_breakdown(DATA_FOLDER):
+-    '''
+-    Function creates dictionary with counts of all the different body parts
+-    '''
+-
+-    body_part_count = {}
+-
+-    file_list = get_file_list(DATA_FOLDER)
+-    for full_f in file_list:
+-        #prevent macs from fucking up
+-        if('DS_Store' in full_f):
+-            continue
+-        dcm = pydicom.read_file(full_f)
+-        meta_inf = pydicom.filereader.dcmread(full_f)
+-        body_part = meta_inf.BodyPartExamined
+-        if body_part in body_part_count:
+-            body_part_count[body_part] += 1
+-        else:
+-            body_part_count[body_part] = 0
+-        
+-    return body_part_count
+-
+-
+-def anonymize_data(DATA_FOLDER,DATA_SAVE_PATH):
+-    '''
+-    Iterates through every dicom image and removes any private or revealing information
+-    DATA_SAVE_PATH: where to output anonymized dicom files
+-    '''
+-
+-    if not os.path.exists(DATA_SAVE_PATH):
+-        os.makedirs(DATA_SAVE_PATH)
+-    file_list = get_file_list(DATA_FOLDER)
+-    for full_f in file_list:
+-        #prevent macs from fucking up
+-        if('DS_Store' in full_f):
+-            continue
+-        
+-        dcm = pydicom.read_file(full_f)
+-        meta_inf = pydicom.filereader.dcmread(full_f)
+-
+-        tags_to_anonymize = ['PatientID','PatientBirthDate','PatientName', 'PatientAddress']
+-
+-        for tag in tags_to_anonymize:
+-            if(tag in meta_inf):
+-                meta_inf.data_element(tag).value = '********'
+-
+-        output_filename = DATA_SAVE_PATH+full_f.split('/')[-1]
+-        meta_inf.save_as(output_filename)
+-
+-
+-        
+-        
+-
+-
+-
+-
+-
+-# d = get_all_patients(DATA_FOLDER)
+-# body_parts = bodypart_breakdown(DATA_FOLDER)
+-# anonymize_data(DATA_FOLDER,DATA_SAVE)
+-# pdb.set_trace()
+-
+-
