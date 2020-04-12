@@ -4,21 +4,32 @@
 
 import cv2
 import numpy as np
+import pdb
 
 
+def decrease_intesity(im, r, value=10):
+    '''
+    Decreases image pixel intesity for pixels outside of bounding box
+    '''
+    for i in range(im.shape[0]):
+        for j in range(im.shape[1]):
+            for k in range(im.shape[2]):
+                #check if current pixel location is within bounding box
+                if(not(i>int(r[1]) and i < int(r[1]+r[3]) and j > int(r[0]) and j < int(r[0]+r[2]))):
+                    if((im[i,j,k] - value) < 0):
+                        im[i,j,k] = 0
+                    elif((im[i,j,k] - value) > 255):
+                        im[i,j,k] = 255
+                    else:
+                        im[i,j,k] = im[i,j,k] - value
+    return im
 
-if __name__ == '__main__':
-
-    im = cv2.imread("Oneimage.jpg")
-    # Select ROI
+def select_roi(im, val=50):
     r = cv2.selectROI(im)
+    print(r)
+    new_im = decrease_intesity(im, r, value=val)
+    return new_im
 
-    imCrop = im[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
-    # Display cropped image
-    cv2.imshow("OneImage", imCrop)
-    cv2.waitKey(0)
 
-    fromCenter = False
-    r = cv2.selectROI(im, fromCenter)
 
 

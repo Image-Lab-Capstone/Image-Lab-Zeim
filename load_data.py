@@ -5,10 +5,15 @@ from skimage import io
 import cv2
 import pandas as pd
 from tqdm import tqdm
+import testLasso
 
 RESIZE_DIM = 128
 
-def get_scans(img_loc, labels_path, debug_mode=False):
+def get_scans(img_loc, labels_path, manual_crop=False, crop_mag = 50, debug_mode=False):
+    '''
+    manual_crop: Flag to set whether or not doctor selects region of interest
+    crop_mag: how severely to decreaser intesity of regions outside of interest
+    '''
     df = pd.read_csv(labels_path)
     def extract_label(x):
         # Only get the first label for now.
@@ -31,6 +36,10 @@ def get_scans(img_loc, labels_path, debug_mode=False):
         if len(im.shape) == 3:
             continue
         im = cv2.resize(im, (RESIZE_DIM, RESIZE_DIM))
+
+        #check if user wants to crop for region of interest
+        if(manual_crop):
+            im  = testLasso.select_roi(im, crop_mag)
         label_str = label_map[scan_path]
         label = uniq_vals.index(label_str)
 
