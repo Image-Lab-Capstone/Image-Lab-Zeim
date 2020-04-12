@@ -5,7 +5,7 @@ from skimage import io
 import cv2
 import pandas as pd
 from tqdm import tqdm
-import testLasso
+import crop_util
 
 RESIZE_DIM = 128
 
@@ -39,7 +39,7 @@ def get_scans(img_loc, labels_path, manual_crop=False, crop_mag = 50, debug_mode
 
         #check if user wants to crop for region of interest
         if(manual_crop):
-            im  = testLasso.select_roi(im, crop_mag)
+            im  = crop_util.select_roi(im, crop_mag)
         label_str = label_map[scan_path]
         label = uniq_vals.index(label_str)
 
