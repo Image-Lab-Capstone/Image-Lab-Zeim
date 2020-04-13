@@ -9,7 +9,7 @@ import pdb
 
 
 def decrease_intesity(im, r, value=10):
-    '''
+    '''https://www.youtube.com/watch?v=WxKS6Uo5n8c
     Decreases image pixel intesity for pixels outside of bounding box
     '''
     for i in range(im.shape[0]):

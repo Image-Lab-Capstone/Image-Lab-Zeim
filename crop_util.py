@@ -1,6 +1,7 @@
 #https://www.pluralsight.com/guides/importing-image-data-into-numpy-arrays
 #https://matplotlib.org/users/installing.html#installing-an-official-release
 #https://matplotlib.org/3.1.1/gallery/widgets/lasso_selector_demo_sgskip.html
+#https://www.learnopencv.com/how-to-select-a-bounding-box-roi-in-opencv-cpp-python/
 
 import cv2
 import numpy as np
