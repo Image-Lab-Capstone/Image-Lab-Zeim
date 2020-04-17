@@ -4,25 +4,33 @@ from sklearn.model_selection import train_test_split
 from load_data import get_scans
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, Dropout, MaxPooling2D
 import argparse
+import os
+import os.path as osp
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--batch-size', type=int, default=64)
 parser.add_argument('--epochs', type=int, default=10)
 parser.add_argument('--use-wb', action='store_true')
 parser.add_argument('--wb-proj', type=str, default='andrew-random')
+parser.add_argument('--image-folders', type=str, default=None)
+parser.add_argument('--image-labels', type=str, default=None)
 args = parser.parse_args()
+
+MODELS_DIR = 'trained_models/'
+
+assert args.image_labels is not None
+assert args.image_folders is not None
 
 if args.use_wb:
     from wandb.keras import WandbCallback
     import wandb
     wandb.init(project=args.wb_proj)
 
-# LOCATION OF THE FOLDERS CONTAINING THE DICOM FILES.
-DATA_FOLDER = '/data/aszot/kaggle/images_001/images'
-LABEL_PATH = '/data/aszot/kaggle/Data_Entry_2017.csv'
+data_folders = args.image_folders.split(',')
+
 SHUFFLE_BUFFER_SIZE = 100
 
-X, y, info = get_scans(DATA_FOLDER, LABEL_PATH, debug_mode=False)
+X, y, info = get_scans(data_folders, args.image_labels, debug_mode=True)
 num_labels = info['uniq_count']
 
 X = np.array(X)
@@ -51,10 +59,17 @@ model = tf.keras.Sequential([
     Dense(num_labels)
 ])
 
+if not osp.exists(MODELS_DIR):
+    os.makedirs(MODELS_DIR)
+
+save_model_file_name = osp.join(MODELS_DIR, 'weights.{epoch:02d}.hdf5')
 
 callbacks = []
 if args.use_wb:
     callbacks.append(WandbCallback())
+
+model_save_cb = tf.keras.callbacks.ModelCheckpoint(save_model_file_name)
+callbacks.append(model_save_cb)
 
 model.compile(optimizer=tf.keras.optimizers.RMSprop(),
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),

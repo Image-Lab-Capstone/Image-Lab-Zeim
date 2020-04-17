@@ -9,7 +9,7 @@ import crop_util
 
 RESIZE_DIM = 128
 
-def get_scans(img_loc, labels_path, manual_crop=False, crop_mag = 50, debug_mode=False):
+def get_scans(img_locs, labels_path, manual_crop=False, crop_mag = 50, debug_mode=False):
     '''
     manual_crop: Flag to set whether or not doctor selects region of interest
     crop_mag: how severely to decreaser intesity of regions outside of interest
@@ -25,8 +25,12 @@ def get_scans(img_loc, labels_path, manual_crop=False, crop_mag = 50, debug_mode
     X = []
     y = []
 
-    print('Loading files from %s' % img_loc)
-    take_file_paths = os.listdir(img_loc)
+    all_file_paths = []
+    for img_loc in img_locs:
+        print('Loading files from %s' % img_loc)
+        take_file_paths = os.listdir(img_loc)
+        all_file_paths.extend(take_file_paths)
+
     if debug_mode:
         take_file_paths = take_file_paths[:20]
 
