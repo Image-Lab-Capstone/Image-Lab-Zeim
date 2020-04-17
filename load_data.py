@@ -29,12 +29,12 @@ def get_scans(img_locs, labels_path, manual_crop=False, crop_mag = 50, debug_mod
     for img_loc in img_locs:
         print('Loading files from %s' % img_loc)
         take_file_paths = os.listdir(img_loc)
-        all_file_paths.extend(take_file_paths)
+        all_file_paths.extend([(img_loc, fp) for fp in take_file_paths])
 
     if debug_mode:
-        take_file_paths = take_file_paths[:20]
+        all_file_paths = all_file_paths[:20]
 
-    for scan_path in tqdm(take_file_paths):
+    for img_loc, scan_path in tqdm(all_file_paths):
         full_path = osp.join(img_loc, scan_path)
         im = io.imread(full_path)
         if len(im.shape) == 3:
