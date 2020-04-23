@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Apr 18 16:54:28 2020
-
-@author: Scott
-"""
 import numpy as np
 from tensorflow.keras.utils import plot_model
 from sklearn.model_selection import train_test_split
