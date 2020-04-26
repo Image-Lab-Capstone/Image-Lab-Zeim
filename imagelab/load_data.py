@@ -11,7 +11,7 @@ import pickle
 
 RESIZE_DIM = 128
 
-def get_scans(img_locs, labels_path, is_eval, args, manual_crop=False, crop_mag = 50,
+def get_scans(img_locs, labels_path, is_eval, args, crop_mag = 50,
         debug_mode=False):
     '''
     manual_crop: Flag to set whether or not doctor selects region of interest
@@ -73,8 +73,8 @@ def get_scans(img_locs, labels_path, is_eval, args, manual_crop=False, crop_mag 
         im = cv2.resize(im, (RESIZE_DIM, RESIZE_DIM))
 
         #check if user wants to crop for region of interest
-        if(manual_crop):
-            im  = crop_util.select_roi(im, crop_mag)
+        if(args.manual_crop):
+            im  = imagelab.crop_util.select_roi(im, crop_mag)
         label_str = label_map[scan_path]
         label = uniq_vals.index(label_str)
 

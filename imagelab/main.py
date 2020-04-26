@@ -27,6 +27,7 @@ def get_args():
     parser.add_argument('--image-labels', type=str, default=None)
     parser.add_argument('--load-model-name', type=str, default=None)
     parser.add_argument('--save-name', type=str, default='def')
+    parser.add_argument('--manual-crop', type=bool, default=False)
     args = parser.parse_args()
     assert args.image_labels is not None
     assert args.image_folders is not None
