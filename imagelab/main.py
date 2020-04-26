@@ -23,6 +23,7 @@ def get_args():
     parser.add_argument('--epochs', type=int, default=10)
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--use-wb', action='store_true')
+    parser.add_argument('--viz-model', action='store_true')
     parser.add_argument('--wb-proj', type=str, default='andrew-random')
     parser.add_argument('--image-folders', type=str, default=None)
     parser.add_argument('--image-labels', type=str, default=None)
@@ -100,7 +101,8 @@ def train_model(train_dataset, test_dataset, info, args):
         os.makedirs(MODELS_DIR)
 
     # Save a diagram of the model.
-    plot_model(model, to_file=osp.join(DATA_DIR, 'model.png'), show_shapes=True)
+    if args.viz_model:
+        plot_model(model, to_file=osp.join(DATA_DIR, 'model.png'), show_shapes=True)
 
     save_model_file_name = osp.join(MODELS_DIR, 'weights.{epoch:02d}.hdf5')
 
