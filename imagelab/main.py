@@ -126,6 +126,6 @@ def run():
     the data and training the model.
     """
     args = get_args()
-    init_seeds(args)
+    init_seeds(args.seed)
     train_dataset, test_dataset, info = load_data(args)
     train_model(train_dataset, test_dataset, info, args)
