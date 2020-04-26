@@ -32,13 +32,13 @@ def get_args():
 
     return args
 
-def init_seeds():
+def init_seeds(seed):
     """
     Initializes the random number generator across tensorflow and numpy for
     consistent results across runs.
     """
-    tf.random.set_seed(args.seed)
-    np.random.seed(args.seed)
+    tf.random.set_seed(seed)
+    np.random.seed(seed)
 
 def load_data(args):
     """
@@ -120,12 +120,12 @@ def train_model(train_dataset, test_dataset, info, args):
     model.fit(train_dataset, epochs=args.epochs, callbacks=callbacks)
     model.evaluate(test_dataset)
 
-def main():
+def run():
     """
     Entry point for the entire program. Runs through the process of loading in
     the data and training the model.
     """
-    init_seeds()
     args = get_args()
+    init_seeds(args)
     train_dataset, test_dataset, info = load_data(args)
     train_model(train_dataset, test_dataset, info, args)
