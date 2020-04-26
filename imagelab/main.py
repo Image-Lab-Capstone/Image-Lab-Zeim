@@ -77,6 +77,7 @@ def train_model(train_dataset, test_dataset, info, args):
         import wandb
         wandb.init(project=args.wb_proj)
     num_labels = info['uniq_count']
+    img_height, img_width = info['data_shape']
 
     # Define the deep neural netwrok.
     model = tf.keras.Sequential([

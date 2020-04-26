@@ -64,7 +64,8 @@ def get_scans(img_locs, labels_path, manual_crop=False, crop_mag = 50, debug_mod
     print('Loaded %i images' % len(X))
 
     return X, y, {
-            'uniq_count': len(uniq_vals)
+            'uniq_count': len(uniq_vals),
+            'data_shape': X[0].shape,
             }
 
 
