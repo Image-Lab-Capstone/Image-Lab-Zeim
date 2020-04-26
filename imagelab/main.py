@@ -1,18 +1,16 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.utils import plot_model
+from tensorflow.keras.models import load_model
 from sklearn.model_selection import train_test_split
 from imagelab.load_data import get_scans
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, Dropout, MaxPooling2D
 import argparse
 import os
 import os.path as osp
-
-# Predefined directories for models and data. Models and images must be placed
-# within these directories. Please see the documentation for more information.
-MODELS_DIR = 'trained_models/'
-DATA_DIR = 'data/'
-
+import pandas as pd
+import pickle
+from imagelab.constants import *
 
 def get_args():
     """
@@ -27,6 +25,8 @@ def get_args():
     parser.add_argument('--wb-proj', type=str, default='andrew-random')
     parser.add_argument('--image-folders', type=str, default=None)
     parser.add_argument('--image-labels', type=str, default=None)
+    parser.add_argument('--load-model-name', type=str, default=None)
+    parser.add_argument('--save-name', type=str, default='def')
     args = parser.parse_args()
     assert args.image_labels is not None
     assert args.image_folders is not None
@@ -48,14 +48,22 @@ def load_data(args):
     """
     data_folders = args.image_folders.split(',')
 
-    SHUFFLE_BUFFER_SIZE = 100
-
-    X, y, info = get_scans(data_folders, args.image_labels, debug_mode=False)
+    X, y, info = get_scans(data_folders, args.image_labels,
+            args.load_model_name is not None,
+            args, debug_mode=False)
 
     X = np.array(X)
     img_width, img_height = X.shape[1:]
     X = X.reshape(-1, img_width, img_height, 1)
     y = np.array(y)
+    return X, y, info
+
+
+def train_model(model, X, y, args, info):
+    with open(osp.join(MODELS_DIR, f"{args.save_name}_labels.pickle"), "wb") as f:
+        pickle.dump(info['labels'], f)
+
+    SHUFFLE_BUFFER_SIZE = 100
 
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
@@ -64,9 +72,39 @@ def load_data(args):
 
     train_dataset = train_dataset.shuffle(SHUFFLE_BUFFER_SIZE).batch(args.batch_size)
     test_dataset = test_dataset.batch(args.batch_size)
-    return train_dataset, test_dataset, info
 
-def train_model(train_dataset, test_dataset, info, args):
+    save_model_file_name = osp.join(MODELS_DIR, args.save_name + '_weights.{epoch:02d}.hdf5')
+
+    callbacks = []
+    if args.use_wb:
+        # Callback to log results to the W&B logging service.
+        callbacks.append(WandbCallback())
+
+    # Callback to save the model every several epochs.
+    model_save_cb = tf.keras.callbacks.ModelCheckpoint(save_model_file_name)
+    callbacks.append(model_save_cb)
+
+    model.compile(optimizer=tf.keras.optimizers.RMSprop(),
+                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                  metrics=['sparse_categorical_accuracy'])
+
+    # Start the training.
+    model.fit(train_dataset, epochs=args.epochs, callbacks=callbacks)
+    model.evaluate(test_dataset)
+
+def evaluate_model(model, X, y, args, info):
+    model = load_model(args.load_model_name)
+    preds = model.predict_classes(X)
+    label_strs = [info['labels'][pred] for pred in preds]
+    f_names = [x[1] for x in info['file_names']]
+    all_dat = list(zip(f_names, label_strs))
+    df = pd.DataFrame(all_dat, columns=['file_name', 'prediction'])
+    save_name = args.load_model_name.split('/')[1].replace('.', '_')
+    save_path = osp.join(PRED_DIR, save_name + '.csv')
+    print(f"Saved results to {save_path}")
+    df.to_csv(save_path, index=False)
+
+def construct_model(info, args):
     """
     Construct the Keras deep neural network and train it on the input data.
     Training parameters are specified via `args`.
@@ -99,29 +137,14 @@ def train_model(train_dataset, test_dataset, info, args):
         os.makedirs(DATA_DIR)
     if not osp.exists(MODELS_DIR):
         os.makedirs(MODELS_DIR)
+    if not osp.exists(PRED_DIR):
+        os.makedirs(PRED_DIR)
 
     # Save a diagram of the model.
     if args.viz_model:
         plot_model(model, to_file=osp.join(DATA_DIR, 'model.png'), show_shapes=True)
 
-    save_model_file_name = osp.join(MODELS_DIR, 'weights.{epoch:02d}.hdf5')
-
-    callbacks = []
-    if args.use_wb:
-        # Callback to log results to the W&B logging service.
-        callbacks.append(WandbCallback())
-
-    # Callback to save the model every several epochs.
-    model_save_cb = tf.keras.callbacks.ModelCheckpoint(save_model_file_name)
-    callbacks.append(model_save_cb)
-
-    model.compile(optimizer=tf.keras.optimizers.RMSprop(),
-                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-                  metrics=['sparse_categorical_accuracy'])
-
-    # Start the training.
-    model.fit(train_dataset, epochs=args.epochs, callbacks=callbacks)
-    model.evaluate(test_dataset)
+    return model
 
 def run():
     """
@@ -130,5 +153,10 @@ def run():
     """
     args = get_args()
     init_seeds(args.seed)
-    train_dataset, test_dataset, info = load_data(args)
-    train_model(train_dataset, test_dataset, info, args)
+    X, y, info = load_data(args)
+    model = construct_model(info, args)
+
+    if args.load_model_name is not None:
+        evaluate_model(model, X, y, args, info)
+    else:
+        train_model(model, X, y, args, info)
